@@ -112,15 +112,14 @@ contract BondTreasury is Ownable {
      * ------------------
      */
     
-    // Bond asset for discounted 3omb at bond rate
+    // Bond asset for discounted Tomb at bond rate
 
     function bond(address token, uint256 amount) external onlyAsset(token) {
         require(amount > 0, "BondTreasury: invalid bond amount");
         uint256 tombAmount = getTombReturn(token, amount);
         require(tombAmount <= Tomb.balanceOf(address(this)) - totalVested, "BondTreasury: insufficient tomb balance");
 
-        IERC20 Token = IERC20(token);
-        Token.transferFrom(msg.sender, address(this), amount);
+        IERC20(token).transferFrom(msg.sender, address(this), amount);
         _claimVested(msg.sender);
 
         VestingSchedule storage schedule = vesting[msg.sender];
