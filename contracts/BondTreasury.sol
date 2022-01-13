@@ -72,14 +72,25 @@ contract BondTreasury is Ownable {
         address pair;
     }
 
+    struct VestingSchedule {
+        uint256 amount;
+        uint256 period;
+        uint256 end;
+        uint256 claimed;
+        uint256 lastClaimed;
+    }
+
     IERC20 public WFTM = IERC20(0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83);
     IERC20 public Tomb;
     IOracle public TombOracle;
 
     mapping (address => Asset) assets;
+    mapping (address => VestingSchedule) vesting;
 
     uint256 public bondThreshold = 20 * 1e4;
     uint256 public bondFactor = 1 * 1e6;
+    uint256 public bondVesting = 3 days;
+    uint256 public totalVested = 0;
 
     uint256 public constant DENOMINATOR = 1e6;
 
@@ -94,6 +105,32 @@ contract BondTreasury is Ownable {
     modifier onlyAsset(address token) {
         require(assets[token].isAdded, "BondTreasury: token is not a bondable asset");
         _;
+    }
+
+    /*
+     * ------------------
+     * EXTERNAL FUNCTIONS
+     * ------------------
+     */
+    
+    // Bond asset for discounted 3omb at bond rate
+
+    function bond(address token, uint256 amount) external onlyAsset(token) {
+        require(amount > 0, "BondTreasury: invalid bond amount");
+        uint256 tombAmount = getTombReturn(token, amount);
+        require(tombAmount <= Tomb.balanceOf(address(this)) - totalVested, "BondTreasury: insufficient tomb balance");
+
+        IERC20 Token = IERC20(token);
+        Token.transferFrom(msg.sender, address(this), amount);
+        _claimVested(msg.sender);
+
+        VestingSchedule storage schedule = vesting[msg.sender];
+        schedule.amount = schedule.amount - schedule.claimed + tombAmount;
+        schedule.period = bondVesting;
+        schedule.end = block.timestamp + bondVesting;
+        schedule.claimed = 0;
+        schedule.lastClaimed = block.timestamp;
+        totalVested += tombAmount;
     }
 
     /*
@@ -133,9 +170,30 @@ contract BondTreasury is Ownable {
 
     // Set bond pricing parameters
 
-    function setBondParameters(uint256 threshold, uint256 factor) external onlyOwner {
+    function setBondParameters(uint256 threshold, uint256 factor, uint256 vestingPeriod) external onlyOwner {
         bondThreshold = threshold;
         bondFactor = factor;
+        bondVesting = vestingPeriod;
+    }
+
+    /*
+     * ------------------
+     * INTERNAL FUNCTIONS
+     * ------------------
+     */
+
+    function _claimVested(address account) internal {
+        VestingSchedule storage schedule = vesting[account];
+        if (schedule.amount == 0 || schedule.amount == schedule.claimed) return;
+        if (block.timestamp <= schedule.lastClaimed || schedule.lastClaimed >= schedule.end) return;
+
+        uint256 duration = (block.timestamp > schedule.end ? schedule.end : block.timestamp) - schedule.lastClaimed;
+        uint256 claimable = schedule.amount * duration / schedule.period;
+        if (claimable == 0) return;
+
+        schedule.claimed += claimable;
+        schedule.lastClaimed = block.timestamp > schedule.end ? schedule.end : block.timestamp;
+        Tomb.transfer(account, claimable);
     }
 
     /*
@@ -188,6 +246,15 @@ contract BondTreasury is Ownable {
             return tokenPrice * reserve1 * 1e18 / totalPairSupply +
                    reserve0 * 1e18 / totalPairSupply;
         }
+    }
+
+    // Get claimable vested Tomb for account
+
+    function claimableTomb(address account) external view returns (uint256) {
+        VestingSchedule memory schedule = vesting[account];
+        if (block.timestamp <= schedule.lastClaimed || schedule.lastClaimed >= schedule.end) return 0;
+        uint256 duration = (block.timestamp > schedule.end ? schedule.end : block.timestamp) - schedule.lastClaimed;
+        return schedule.amount * duration / schedule.period;
     }
 
 }
