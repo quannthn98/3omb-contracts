@@ -212,7 +212,7 @@ contract BondTreasury is Ownable {
     function getTombReturn(address token, uint256 amount) public view onlyAsset(token) returns (uint256) {
         uint256 tokenPrice = getTokenPrice(token);
         uint256 bondPremium = getBondPremium();
-        return amount * tokenPrice * (bondPremium + DENOMINATOR) / DENOMINATOR;
+        return amount * tokenPrice * (bondPremium + DENOMINATOR) * assets[token].multiplier / (DENOMINATOR * DENOMINATOR);
     }
 
     // Calculate premium for bonds based on bonding curve
