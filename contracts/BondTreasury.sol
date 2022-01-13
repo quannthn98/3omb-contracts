@@ -102,6 +102,18 @@ contract BondTreasury is Ownable {
      * --------------------
      */
     
+    // Set Tomb token
+
+    function setTomb(address tomb) external onlyOwner {
+        Tomb = IERC20(tomb);
+    }
+
+    // Set Tomb oracle
+
+    function setTombOracle(address oracle) external onlyOwner {
+        TombOracle = IOracle(oracle);
+    }
+    
     // Set bonding parameters of token
     
     function setAsset(
@@ -117,6 +129,13 @@ contract BondTreasury is Ownable {
         assets[token].oracle = oracle;
         assets[token].isLP = isLP;
         assets[token].pair = pair;
+    }
+
+    // Set bond pricing parameters
+
+    function setBondParameters(uint256 threshold, uint256 factor) external onlyOwner {
+        bondThreshold = threshold;
+        bondFactor = factor;
     }
 
     /*
