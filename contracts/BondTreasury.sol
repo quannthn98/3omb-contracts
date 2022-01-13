@@ -234,7 +234,12 @@ contract BondTreasury is Ownable {
 
         uint256 tombPremium = tombPrice * DENOMINATOR / 1e18 - DENOMINATOR;
         if (tombPremium < bondThreshold) return 0;
-        return (tombPremium - bondThreshold) * bondFactor / DENOMINATOR;
+        if (tombPremium <= secondaryThreshold) {
+            return (tombPremium - bondThreshold) * bondFactor / DENOMINATOR;
+        } else {
+            uint256 primaryPremium = (secondaryThreshold - bondThreshold) * bondFactor / DENOMINATOR;
+            return primaryPremium + (tombPremium - secondaryThreshold) * bondFactor / DENOMINATOR;
+        }
     }
 
     // Get TOMB price from Oracle
