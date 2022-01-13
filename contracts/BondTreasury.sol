@@ -258,7 +258,8 @@ contract BondTreasury is Ownable {
     function claimableTomb(address account) external view returns (uint256) {
         VestingSchedule memory schedule = vesting[account];
         if (block.timestamp <= schedule.lastClaimed || schedule.lastClaimed >= schedule.end) return 0;
-        return schedule.amount - schedule.claimed;
+        uint256 duration = (block.timestamp > schedule.end ? schedule.end : block.timestamp) - schedule.lastClaimed;
+        return schedule.amount * duration / schedule.period;
     }
 
 }
