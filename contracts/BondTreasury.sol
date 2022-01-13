@@ -261,10 +261,10 @@ contract BondTreasury is Ownable {
         (uint256 reserve0, uint256 reserve1,) = Pair.getReserves();
 
         if (token0 == token) {
-            return tokenPrice * reserve0 * 1e18 / totalPairSupply +
+            return tokenPrice * reserve0 * 1e18 / totalPairSupply / 1e18 +
                    reserve1 * 1e18 / totalPairSupply;
         } else {
-            return tokenPrice * reserve1 * 1e18 / totalPairSupply +
+            return tokenPrice * reserve1 * 1e18 / totalPairSupply / 1e18 +
                    reserve0 * 1e18 / totalPairSupply;
         }
     }
