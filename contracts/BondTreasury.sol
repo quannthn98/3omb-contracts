@@ -2,7 +2,6 @@
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts-0.8/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts-0.8/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts-0.8/access/Ownable.sol";
 
 interface IOracle {
@@ -224,7 +223,7 @@ contract BondTreasury is Ownable {
         uint256 tombPrice = getTombPrice();
         uint256 tokenPrice = getTokenPrice(token);
         uint256 bondPremium = getBondPremium();
-        return amount * 10 ** (18 - IERC20Metadata(token).decimals()) * tokenPrice * (bondPremium + DENOMINATOR) * assets[token].multiplier / (DENOMINATOR * DENOMINATOR) / tombPrice;
+        return amount * tokenPrice * (bondPremium + DENOMINATOR) * assets[token].multiplier / (DENOMINATOR * DENOMINATOR) / tombPrice;
     }
 
     // Calculate premium for bonds based on bonding curve
