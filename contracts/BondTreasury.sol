@@ -87,7 +87,9 @@ contract BondTreasury is Ownable {
     mapping (address => VestingSchedule) vesting;
 
     uint256 public bondThreshold = 20 * 1e4;
-    uint256 public bondFactor = 1 * 1e6;
+    uint256 public bondFactor = 100 * 1e4;
+    uint256 public secondaryThreshold = 70 * 1e4;
+    uint256 public secondaryFactor = 10 * 1e4;
     uint256 public bondVesting = 3 days;
     uint256 public totalVested = 0;
 
@@ -174,9 +176,17 @@ contract BondTreasury is Ownable {
 
     // Set bond pricing parameters
 
-    function setBondParameters(uint256 threshold, uint256 factor, uint256 vestingPeriod) external onlyOwner {
-        bondThreshold = threshold;
-        bondFactor = factor;
+    function setBondParameters(
+        uint256 primaryThreshold,
+        uint256 primaryFactor,
+        uint256 secondThreshold,
+        uint256 secondFactor,
+        uint256 vestingPeriod
+    ) external onlyOwner {
+        bondThreshold = primaryThreshold;
+        bondFactor = primaryFactor;
+        secondaryThreshold = secondThreshold;
+        secondaryFactor = secondFactor;
         bondVesting = vestingPeriod;
     }
 
