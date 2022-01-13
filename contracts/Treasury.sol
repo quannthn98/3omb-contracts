@@ -503,7 +503,7 @@ contract Treasury is ContractGuard {
     function _sendToBondTreasury(uint256 _amount) internal {
         uint256 unspent = IERC20(tomb).balanceOf(bondTreasury).sub(IBondTreasury(bondTreasury).totalVested());
         if (_amount > unspent) {
-            IBasisAsset(tomb).mint(bondTreasury, _amount - unspent);
+            IBasisAsset(tomb).mint(bondTreasury, _amount.sub(unspent));
         }
     }
 
