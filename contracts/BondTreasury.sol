@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts-0.8/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-0.8/access/Ownable.sol";
 import "hardhat/console.sol";
 
 interface IOracle {
@@ -61,14 +62,14 @@ interface IUniswapV2Pair {
     function initialize(address, address) external;
 }
 
-contract BondTreasury {
+contract BondTreasury is Ownable {
 
     struct Asset {
-        address token;
+        bool isAdded;
         uint256 multiplier;
         address oracle;
-        address pair;
         bool isLP;
+        address pair;
     }
 
     IERC20 public WFTM = IERC20(0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83);
@@ -82,11 +83,52 @@ contract BondTreasury {
 
     uint256 public constant DENOMINATOR = 1e6;
 
+    /*
+     * ---------
+     * MODIFIERS
+     * ---------
+     */
+    
+    // Only allow a function to be called with a bondable asset
+
+    modifier onlyAsset(address token) {
+        require(assets[token].isAdded, "BondTreasury: token is not a bondable asset");
+        _;
+    }
+
+    /*
+     * --------------------
+     * RESTRICTED FUNCTIONS
+     * --------------------
+     */
+    
+    // Set bonding parameters of token
+    
+    function setAsset(
+        address token,
+        bool isAdded,
+        uint256 multiplier,
+        address oracle,
+        bool isLP,
+        address pair
+    ) external onlyOwner {
+        assets[token].isAdded = isAdded;
+        assets[token].multiplier = multiplier;
+        assets[token].oracle = oracle;
+        assets[token].isLP = isLP;
+        assets[token].pair = pair;
+    }
+
+    /*
+     * --------------
+     * VIEW FUNCTIONS
+     * --------------
+     */
+
     // Calculate Tomb return of bonding amount of token
 
-    function getTombReturn(address token, uint256 amount) public view returns (uint256) {
-        Asset memory asset = assets[token];
-        uint256 tokenPrice = getTokenPrice(asset);
+    function getTombReturn(address token, uint256 amount) public view onlyAsset(token) returns (uint256) {
+        uint256 tokenPrice = getTokenPrice(token);
         uint256 bondPremium = getBondPremium();
         return amount * tokenPrice * (bondPremium + DENOMINATOR) / DENOMINATOR;
     }
@@ -110,8 +152,9 @@ contract BondTreasury {
 
     // Get token price from Oracle
 
-    function getTokenPrice(Asset memory asset) public view returns (uint256) {
-        uint256 tokenPrice = IOracle(asset.oracle).consult(asset.token, 1e18);
+    function getTokenPrice(address token) public view onlyAsset(token) returns (uint256) {
+        Asset memory asset = assets[token];
+        uint256 tokenPrice = IOracle(asset.oracle).consult(token, 1e18);
         if (!asset.isLP) return tokenPrice;
 
         IUniswapV2Pair Pair = IUniswapV2Pair(asset.pair);
@@ -119,7 +162,7 @@ contract BondTreasury {
         address token0 = Pair.token0();
         (uint256 reserve0, uint256 reserve1,) = Pair.getReserves();
 
-        if (token0 == asset.token) {
+        if (token0 == token) {
             return tokenPrice * reserve0 * 1e18 / totalPairSupply +
                    reserve1 * 1e18 / totalPairSupply;
         } else {
