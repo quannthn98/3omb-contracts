@@ -501,9 +501,10 @@ contract Treasury is ContractGuard {
     }
 
     function _sendToBondTreasury(uint256 _amount) internal {
-        uint256 maxAmount = IERC20(tomb).balanceOf(bondTreasury).sub(IBondTreasury(bondTreasury).totalVested());
-        uint256 tombAmount = _amount > maxAmount ? maxAmount : _amount;
-        IBasisAsset(tomb).mint(bondTreasury, tombAmount);
+        uint256 unspent = IERC20(tomb).balanceOf(bondTreasury).sub(IBondTreasury(bondTreasury).totalVested());
+        if (_amount > unspent) {
+            IBasisAsset(tomb).mint(bondTreasury, _amount - unspent);
+        }
     }
 
     function _calculateMaxSupplyExpansionPercent(uint256 _tombSupply) internal returns (uint256) {
