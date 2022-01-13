@@ -75,14 +75,25 @@ contract BondTreasury {
     IERC20 public Tomb;
     IOracle public TombOracle;
 
+    mapping (address => Asset) assets;
+
     uint256 public bondThreshold = 20 * 1e4;
     uint256 public bondFactor = 1 * 1e6;
 
     uint256 public constant DENOMINATOR = 1e6;
 
+    // Calculate Tomb return of bonding amount of token
+
+    function getTombReturn(address token, uint256 amount) public view returns (uint256) {
+        Asset memory asset = assets[token];
+        uint256 tokenPrice = getTokenPrice(asset);
+        uint256 bondPremium = getBondPremium();
+        return amount * tokenPrice * (bondPremium + DENOMINATOR) / DENOMINATOR;
+    }
+
     // Calculate premium for bonds based on bonding curve
 
-    function getBondPremium() external view returns (uint256) {
+    function getBondPremium() public view returns (uint256) {
         uint256 tombPrice = 150 * 1e18 / 100;//getTombPrice();
         if (tombPrice < 1e18) return 0;
 
@@ -99,7 +110,7 @@ contract BondTreasury {
 
     // Get token price from Oracle
 
-    function getTokenPrice(Asset calldata asset) public view returns (uint256) {
+    function getTokenPrice(Asset memory asset) public view returns (uint256) {
         uint256 tokenPrice = IOracle(asset.oracle).consult(asset.token, 1e18);
         if (!asset.isLP) return tokenPrice;
 
