@@ -229,7 +229,7 @@ contract BondTreasury is Ownable {
     // Calculate premium for bonds based on bonding curve
 
     function getBondPremium() public view returns (uint256) {
-        uint256 tombPrice = 150 * 1e18 / 100;//getTombPrice();
+        uint256 tombPrice = 180 * 1e18 / 100;//getTombPrice();
         if (tombPrice < 1e18) return 0;
 
         uint256 tombPremium = tombPrice * DENOMINATOR / 1e18 - DENOMINATOR;
@@ -238,7 +238,7 @@ contract BondTreasury is Ownable {
             return (tombPremium - bondThreshold) * bondFactor / DENOMINATOR;
         } else {
             uint256 primaryPremium = (secondaryThreshold - bondThreshold) * bondFactor / DENOMINATOR;
-            return primaryPremium + (tombPremium - secondaryThreshold) * bondFactor / DENOMINATOR;
+            return primaryPremium + (tombPremium - secondaryThreshold) * secondaryFactor / DENOMINATOR;
         }
     }
 
