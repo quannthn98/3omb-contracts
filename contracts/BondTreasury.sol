@@ -3,7 +3,6 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts-0.8/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-0.8/access/Ownable.sol";
-import "hardhat/console.sol";
 
 interface IOracle {
     function update() external;
@@ -133,6 +132,12 @@ contract BondTreasury is Ownable {
         totalVested += tombAmount;
     }
 
+    // Claim available Tomb rewards from bonding
+
+    function claimRewards() external {
+        _claimVested(msg.sender);
+    }
+
     /*
      * --------------------
      * RESTRICTED FUNCTIONS
@@ -193,6 +198,7 @@ contract BondTreasury is Ownable {
 
         schedule.claimed += claimable;
         schedule.lastClaimed = block.timestamp > schedule.end ? schedule.end : block.timestamp;
+        totalVested -= claimable;
         Tomb.transfer(account, claimable);
     }
 
