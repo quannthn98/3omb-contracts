@@ -400,6 +400,10 @@ contract Treasury is ContractGuard {
         mintingFactorForPayingDebt = _mintingFactorForPayingDebt;
     }
 
+    function setBondSupplyExpansionPercent(uint256 _bondSupplyExpansionPercent) external onlyOperator {
+        bondSupplyExpansionPercent = _bondSupplyExpansionPercent;
+    }
+
     /* ========== MUTABLE FUNCTIONS ========== */
 
     function _updateTombPrice() internal {
