@@ -41,15 +41,6 @@ contract ShareWrapper {
     }
 }
 
-/*
-  ______                __       _______
- /_  __/___  ____ ___  / /_     / ____(_)___  ____ _____  ________
-  / / / __ \/ __ `__ \/ __ \   / /_  / / __ \/ __ `/ __ \/ ___/ _ \
- / / / /_/ / / / / / / /_/ /  / __/ / / / / / /_/ / / / / /__/  __/
-/_/  \____/_/ /_/ /_/_.___/  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/
-
-    http://tomb.finance
-*/
 contract Masonry is ShareWrapper, ContractGuard {
     using SafeERC20 for IERC20;
     using Address for address;

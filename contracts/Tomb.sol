@@ -9,15 +9,6 @@ import "./lib/SafeMath8.sol";
 import "./owner/Operator.sol";
 import "./interfaces/IOracle.sol";
 
-/*
-  ______                __       _______
- /_  __/___  ____ ___  / /_     / ____(_)___  ____ _____  ________
-  / / / __ \/ __ `__ \/ __ \   / /_  / / __ \/ __ `/ __ \/ ___/ _ \
- / / / /_/ / / / / / / /_/ /  / __/ / / / / / /_/ / / / / /__/  __/
-/_/  \____/_/ /_/ /_/_.___/  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/
-
-    http://tomb.finance
-*/
 contract Tomb is ERC20Burnable, Operator {
     using SafeMath8 for uint8;
     using SafeMath for uint256;

@@ -14,15 +14,10 @@ import "./interfaces/IBasisAsset.sol";
 import "./interfaces/IOracle.sol";
 import "./interfaces/IMasonry.sol";
 
-/*
-  ______                __       _______
- /_  __/___  ____ ___  / /_     / ____(_)___  ____ _____  ________
-  / / / __ \/ __ `__ \/ __ \   / /_  / / __ \/ __ `/ __ \/ ___/ _ \
- / / / /_/ / / / / / / /_/ /  / __/ / / / / / /_/ / / / / /__/  __/
-/_/  \____/_/ /_/ /_/_.___/  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/
+interface IBondTreasury {
+    function totalVested() external view returns (uint256);
+}
 
-    http://tomb.finance
-*/
 contract Treasury is ContractGuard {
     using SafeERC20 for IERC20;
     using Address for address;
@@ -58,6 +53,7 @@ contract Treasury is ContractGuard {
     address public tshare;
 
     address public masonry;
+    address public bondTreasury;
     address public tombOracle;
 
     // price
@@ -74,6 +70,8 @@ contract Treasury is ContractGuard {
     uint256 public seigniorageExpansionFloorPercent;
     uint256 public maxSupplyContractionPercent;
     uint256 public maxDebtRatioPercent;
+
+    uint256 public bondSupplyExpansionPercent;
 
     // 28 first epochs (1 week) with 4.5% expansion regardless of TOMB price
     uint256 public bootstrapEpochs;
@@ -246,6 +244,7 @@ contract Treasury is ContractGuard {
         address _tshare,
         address _tombOracle,
         address _masonry,
+        address _bondTreasury,
         uint256 _startTime
     ) public notInitialized {
         tomb = _tomb;
@@ -253,6 +252,7 @@ contract Treasury is ContractGuard {
         tshare = _tshare;
         tombOracle = _tombOracle;
         masonry = _masonry;
+        bondTreasury = _bondTreasury;
         startTime = _startTime;
 
         tombPriceOne = 10**18;
@@ -268,6 +268,8 @@ contract Treasury is ContractGuard {
         seigniorageExpansionFloorPercent = 3500; // At least 35% of expansion reserved for masonry
         maxSupplyContractionPercent = 300; // Upto 3.0% supply for contraction (to burn TOMB and mint tBOND)
         maxDebtRatioPercent = 3500; // Upto 35% supply of tBOND to purchase
+
+        bondSupplyExpansionPercent = 1000; // maximum 10% emissions per epoch for POL bonds
 
         premiumThreshold = 110;
         premiumPercent = 7000;
@@ -290,6 +292,10 @@ contract Treasury is ContractGuard {
 
     function setMasonry(address _masonry) external onlyOperator {
         masonry = _masonry;
+    }
+
+    function setBondTreasury(address _bondTreasury) external onlyOperator {
+        bondTreasury = _bondTreasury;
     }
 
     function setTombOracle(address _tombOracle) external onlyOperator {
@@ -490,6 +496,12 @@ contract Treasury is ContractGuard {
         emit MasonryFunded(now, _amount);
     }
 
+    function _sendToBondTreasury(uint256 _amount) internal {
+        uint256 maxAmount = IERC20(tomb).balanceOf(bondTreasury).sub(IBondTreasury(bondTreasury).totalVested());
+        uint256 tombAmount = _amount > maxAmount ? maxAmount : _amount;
+        IBasisAsset(tomb).mint(bondTreasury, tombAmount);
+    }
+
     function _calculateMaxSupplyExpansionPercent(uint256 _tombSupply) internal returns (uint256) {
         for (uint8 tierId = 8; tierId >= 0; --tierId) {
             if (_tombSupply >= supplyTiers[tierId]) {
@@ -504,6 +516,7 @@ contract Treasury is ContractGuard {
         _updateTombPrice();
         previousEpochTombPrice = getTombPrice();
         uint256 tombSupply = getTombCirculatingSupply().sub(seigniorageSaved);
+        _sendToBondTreasury(tombSupply.mul(bondSupplyExpansionPercent).div(10000));
         if (epoch < bootstrapEpochs) {
             // 28 first epochs with 4.5% expansion
             _sendToMasonry(tombSupply.mul(bootstrapSupplyExpansionPercent).div(10000));
