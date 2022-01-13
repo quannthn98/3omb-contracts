@@ -79,7 +79,6 @@ contract BondTreasury is Ownable {
         uint256 lastClaimed;
     }
 
-    IERC20 public WFTM = IERC20(0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83);
     IERC20 public Tomb;
     IOracle public TombOracle;
 
