@@ -10,6 +10,10 @@ interface IOracle {
     function twap(address _token, uint256 _amountIn) external view returns (uint144 _amountOut);
 }
 
+interface ITreasury {
+    function epoch() external view returns (uint256);
+}
+
 interface IUniswapV2Pair {
     event Approval(address indexed owner, address indexed spender, uint value);
     event Transfer(address indexed from, address indexed to, uint value);
@@ -61,7 +65,7 @@ interface IUniswapV2Pair {
     function initialize(address, address) external;
 }
 
-contract BondTreasury is Ownable {
+contract RebateTreasury is Ownable {
 
     struct Asset {
         bool isAdded;
@@ -81,6 +85,7 @@ contract BondTreasury is Ownable {
 
     IERC20 public Tomb;
     IOracle public TombOracle;
+    ITreasury public Treasury;
 
     mapping (address => Asset) assets;
     mapping (address => VestingSchedule) vesting;
@@ -89,8 +94,12 @@ contract BondTreasury is Ownable {
     uint256 public bondFactor = 100 * 1e4;
     uint256 public secondaryThreshold = 70 * 1e4;
     uint256 public secondaryFactor = 10 * 1e4;
+
     uint256 public bondVesting = 3 days;
     uint256 public totalVested = 0;
+
+    uint256 public lastBuyback;
+    uint256 public buybackAmount = 1000;
 
     uint256 public constant DENOMINATOR = 1e6;
 
@@ -103,7 +112,7 @@ contract BondTreasury is Ownable {
     // Only allow a function to be called with a bondable asset
 
     modifier onlyAsset(address token) {
-        require(assets[token].isAdded, "BondTreasury: token is not a bondable asset");
+        require(assets[token].isAdded, "RebateTreasury: token is not a bondable asset");
         _;
     }
 
@@ -112,13 +121,21 @@ contract BondTreasury is Ownable {
      * EXTERNAL FUNCTIONS
      * ------------------
      */
+
+    // Initialize parameters
+
+    constructor() {
+        Tomb = IERC20(0x0000000000000000000000000000000000000000);
+        TombOracle = IOracle(0x0000000000000000000000000000000000000000);
+        Treasury = ITreasury(0x0000000000000000000000000000000000000000);
+    }
     
     // Bond asset for discounted Tomb at bond rate
 
     function bond(address token, uint256 amount) external onlyAsset(token) {
-        require(amount > 0, "BondTreasury: invalid bond amount");
+        require(amount > 0, "RebateTreasury: invalid bond amount");
         uint256 tombAmount = getTombReturn(token, amount);
-        require(tombAmount <= Tomb.balanceOf(address(this)) - totalVested, "BondTreasury: insufficient tomb balance");
+        require(tombAmount <= Tomb.balanceOf(address(this)) - totalVested, "RebateTreasury: insufficient tomb balance");
 
         IERC20(token).transferFrom(msg.sender, address(this), amount);
         _claimVested(msg.sender);
@@ -155,6 +172,12 @@ contract BondTreasury is Ownable {
     function setTombOracle(address oracle) external onlyOwner {
         TombOracle = IOracle(oracle);
     }
+
+    // Set Tomb treasury
+
+    function setTreasury(address treasury) external onlyOwner {
+        Treasury = ITreasury(treasury);
+    }
     
     // Set bonding parameters of token
     
@@ -187,6 +210,20 @@ contract BondTreasury is Ownable {
         secondaryThreshold = secondThreshold;
         secondaryFactor = secondFactor;
         bondVesting = vestingPeriod;
+    }
+
+    // Redeem assets for buyback under peg
+
+    function redeemAssetsForBuyback(address[] calldata tokens) external onlyOwner {
+        uint256 epoch = Treasury.epoch();
+        require(lastBuyback != epoch, "RebateTreasury: already bought back");
+        lastBuyback = epoch;
+
+        for (uint256 t = 0; t < tokens.length; t ++) {
+            require(assets[tokens[t]].isAdded, "RebateTreasury: invalid token");
+            IERC20 Token = IERC20(tokens[t]);
+            Token.transfer(owner(), Token.balanceOf(address(this)) * buybackAmount / DENOMINATOR);
+        }
     }
 
     /*
@@ -228,7 +265,7 @@ contract BondTreasury is Ownable {
     // Calculate premium for bonds based on bonding curve
 
     function getBondPremium() public view returns (uint256) {
-        uint256 tombPrice = 180 * 1e18 / 100;//getTombPrice();
+        uint256 tombPrice = getTombPrice();
         if (tombPrice < 1e18) return 0;
 
         uint256 tombPremium = tombPrice * DENOMINATOR / 1e18 - DENOMINATOR;
