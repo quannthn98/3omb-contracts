@@ -215,6 +215,7 @@ contract RebateTreasury is Ownable {
     // Redeem assets for buyback under peg
 
     function redeemAssetsForBuyback(address[] calldata tokens) external onlyOwner {
+        require(getTombPrice() < 1e18, "RebateTreasury: unable to buy back");
         uint256 epoch = Treasury.epoch();
         require(lastBuyback != epoch, "RebateTreasury: already bought back");
         lastBuyback = epoch;
