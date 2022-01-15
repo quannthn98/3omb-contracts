@@ -93,7 +93,7 @@ contract RebateTreasury is Ownable {
     uint256 public bondThreshold = 20 * 1e4;
     uint256 public bondFactor = 100 * 1e4;
     uint256 public secondaryThreshold = 70 * 1e4;
-    uint256 public secondaryFactor = 10 * 1e4;
+    uint256 public secondaryFactor = 30 * 1e4;
 
     uint256 public bondVesting = 3 days;
     uint256 public totalVested = 0;
