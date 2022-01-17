@@ -87,13 +87,13 @@ contract RebateTreasury is Ownable {
     IOracle public TombOracle;
     ITreasury public Treasury;
 
-    mapping (address => Asset) assets;
-    mapping (address => VestingSchedule) vesting;
+    mapping (address => Asset) public assets;
+    mapping (address => VestingSchedule) public vesting;
 
     uint256 public bondThreshold = 20 * 1e4;
-    uint256 public bondFactor = 120 * 1e4;
-    uint256 public secondaryThreshold = 100 * 1e4;
-    uint256 public secondaryFactor = 40 * 1e4;
+    uint256 public bondFactor = 100 * 1e4;
+    uint256 public secondaryThreshold = 80 * 1e4;
+    uint256 public secondaryFactor = 20 * 1e4;
 
     uint256 public bondVesting = 3 days;
     uint256 public totalVested = 0;

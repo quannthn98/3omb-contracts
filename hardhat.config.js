@@ -1,4 +1,5 @@
 require("@nomiclabs/hardhat-waffle")
+require("@nomiclabs/hardhat-etherscan")
 module.exports = {
     networks: {
         hardhat: {},
@@ -29,5 +30,8 @@ module.exports = {
                 }
             }
         }]
+    },
+    etherscan: {
+        apiKey: "3EBCSRPNAX3BNVPMWSG8F1XEHA9ANI3M5E"
     }
 }
