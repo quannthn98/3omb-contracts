@@ -293,7 +293,7 @@ contract RebateTreasury is Ownable {
         IOracle Oracle = IOracle(asset.oracle);
         if (!asset.isLP) {
             return Oracle.consult(token, 1e18);
-        };
+        }
 
         IUniswapV2Pair Pair = IUniswapV2Pair(asset.pair);
         uint256 totalPairSupply = Pair.totalSupply();
