@@ -91,15 +91,15 @@ contract RebateTreasury is Ownable {
     mapping (address => VestingSchedule) public vesting;
 
     uint256 public bondThreshold = 20 * 1e4;
-    uint256 public bondFactor = 100 * 1e4;
-    uint256 public secondaryThreshold = 80 * 1e4;
-    uint256 public secondaryFactor = 20 * 1e4;
+    uint256 public bondFactor = 80 * 1e4;
+    uint256 public secondaryThreshold = 70 * 1e4;
+    uint256 public secondaryFactor = 15 * 1e4;
 
     uint256 public bondVesting = 3 days;
     uint256 public totalVested = 0;
 
     uint256 public lastBuyback;
-    uint256 public buybackAmount = 1000;
+    uint256 public buybackAmount = 10000;
 
     address public constant WFTM = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
     uint256 public constant DENOMINATOR = 1e6;
