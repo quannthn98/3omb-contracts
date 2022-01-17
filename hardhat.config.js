@@ -5,6 +5,10 @@ module.exports = {
         ropsten: {
             url: "https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
             accounts: []
+        },
+        fantom: {
+            url: "https://rpc.ftm.tools",
+            accounts: []
         }
     },
     solidity: {
