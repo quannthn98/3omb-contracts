@@ -101,6 +101,7 @@ contract RebateTreasury is Ownable {
     uint256 public lastBuyback;
     uint256 public buybackAmount = 1000;
 
+    address public constant WFTM = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
     uint256 public constant DENOMINATOR = 1e6;
 
     /*
@@ -289,18 +290,23 @@ contract RebateTreasury is Ownable {
 
     function getTokenPrice(address token) public view onlyAsset(token) returns (uint256) {
         Asset memory asset = assets[token];
-        uint256 tokenPrice = IOracle(asset.oracle).consult(token, 1e18);
-        if (!asset.isLP) return tokenPrice;
+        IOracle Oracle = IOracle(asset.oracle);
+        if (!asset.isLP) {
+            return Oracle.consult(token, 1e18);
+        };
 
         IUniswapV2Pair Pair = IUniswapV2Pair(asset.pair);
         uint256 totalPairSupply = Pair.totalSupply();
         address token0 = Pair.token0();
+        address token1 = Pair.token1();
         (uint256 reserve0, uint256 reserve1,) = Pair.getReserves();
 
-        if (token0 == token) {
+        if (token1 == WFTM) {
+            uint256 tokenPrice = Oracle.consult(token0, 1e18);
             return tokenPrice * reserve0 * 1e18 / totalPairSupply / 1e18 +
                    reserve1 * 1e18 / totalPairSupply;
         } else {
+            uint256 tokenPrice = Oracle.consult(token1, 1e18);
             return tokenPrice * reserve1 * 1e18 / totalPairSupply / 1e18 +
                    reserve0 * 1e18 / totalPairSupply;
         }
