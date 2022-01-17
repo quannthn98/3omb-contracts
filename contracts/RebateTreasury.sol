@@ -303,11 +303,11 @@ contract RebateTreasury is Ownable {
 
         if (token1 == WFTM) {
             uint256 tokenPrice = Oracle.consult(token0, 1e18);
-            return tokenPrice * reserve0 * 1e18 / totalPairSupply / 1e18 +
+            return tokenPrice * reserve0 / totalPairSupply +
                    reserve1 * 1e18 / totalPairSupply;
         } else {
             uint256 tokenPrice = Oracle.consult(token1, 1e18);
-            return tokenPrice * reserve1 * 1e18 / totalPairSupply / 1e18 +
+            return tokenPrice * reserve1 / totalPairSupply +
                    reserve0 * 1e18 / totalPairSupply;
         }
     }
