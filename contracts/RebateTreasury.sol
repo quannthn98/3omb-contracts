@@ -99,7 +99,7 @@ contract RebateTreasury is Ownable {
     uint256 public totalVested = 0;
 
     uint256 public lastBuyback;
-    uint256 public buybackAmount = 10000;
+    uint256 public buybackAmount = 100000;
 
     address public constant WFTM = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
     uint256 public constant DENOMINATOR = 1e6;
