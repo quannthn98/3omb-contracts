@@ -41,7 +41,7 @@ contract ShareWrapper {
     }
 }
 
-contract Masonry is ShareWrapper, ContractGuard {
+contract ThreeRoom is ShareWrapper, ContractGuard {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;

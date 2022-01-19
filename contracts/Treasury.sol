@@ -42,6 +42,7 @@ contract Treasury is ContractGuard {
 
     // exclusions from total supply
     address[] public excludedFromTotalSupply = [
+        address(0x9A896d3c54D7e45B558BD5fFf26bF1E8C031F93b), // Bond treasury
         address(0x9A896d3c54D7e45B558BD5fFf26bF1E8C031F93b), // TombGenesisPool
         address(0xa7b9123f4b15fE0fF01F469ff5Eab2b41296dC0E), // new TombRewardPool
         address(0xA7B16703470055881e7EE093e9b0bF537f29CD4d) // old TombRewardPool
@@ -269,14 +270,14 @@ contract Treasury is ContractGuard {
         maxSupplyContractionPercent = 300; // Upto 3.0% supply for contraction (to burn TOMB and mint tBOND)
         maxDebtRatioPercent = 3500; // Upto 35% supply of tBOND to purchase
 
-        bondSupplyExpansionPercent = 1000; // maximum 10% emissions per epoch for POL bonds
+        bondSupplyExpansionPercent = 500; // maximum 5% emissions per epoch for POL bonds
 
         premiumThreshold = 110;
         premiumPercent = 7000;
 
-        // First 28 epochs with 4.5% expansion
-        bootstrapEpochs = 28;
-        bootstrapSupplyExpansionPercent = 450;
+        // First 12 epochs with 5% expansion
+        bootstrapEpochs = 12;
+        bootstrapSupplyExpansionPercent = 500;
 
         // set seigniorageSaved to it's balance
         seigniorageSaved = IERC20(tomb).balanceOf(address(this));

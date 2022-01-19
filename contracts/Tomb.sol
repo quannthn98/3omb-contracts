@@ -14,11 +14,11 @@ contract Tomb is ERC20Burnable, Operator {
     using SafeMath for uint256;
 
     // Initial distribution for the first 24h genesis pools
-    uint256 public constant INITIAL_GENESIS_POOL_DISTRIBUTION = 11000 ether;
+    uint256 public constant INITIAL_GENESIS_POOL_DISTRIBUTION = 25000 ether;
     // Initial distribution for the day 2-5 TOMB-WFTM LP -> TOMB pool
-    uint256 public constant INITIAL_TOMB_POOL_DISTRIBUTION = 140000 ether;
+    uint256 public constant INITIAL_TOMB_POOL_DISTRIBUTION = 0 ether;
     // Distribution for airdrops wallet
-    uint256 public constant INITIAL_AIRDROP_WALLET_DISTRIBUTION = 9000 ether;
+    uint256 public constant INITIAL_AIRDROP_WALLET_DISTRIBUTION = 0 ether;
 
     // Have the rewards been distributed to the pools
     bool public rewardPoolDistributed = false;
@@ -61,7 +61,7 @@ contract Tomb is ERC20Burnable, Operator {
     /**
      * @notice Constructs the TOMB ERC-20 contract.
      */
-    constructor(uint256 _taxRate, address _taxCollectorAddress) public ERC20("TOMB", "TOMB") {
+    constructor(uint256 _taxRate, address _taxCollectorAddress) public ERC20("3OMB", "3OMB Token") {
         // Mints 1 TOMB to contract creator for initial pool setup
         require(_taxRate < 10000, "tax equal or bigger to 100%");
         require(_taxCollectorAddress != address(0), "tax collector address must be non-zero address");
