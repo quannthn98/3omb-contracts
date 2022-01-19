@@ -125,10 +125,10 @@ contract RebateTreasury is Ownable {
 
     // Initialize parameters
 
-    constructor() {
-        Tomb = IERC20(0x0000000000000000000000000000000000000000);
-        TombOracle = IOracle(0x0000000000000000000000000000000000000000);
-        Treasury = ITreasury(0x0000000000000000000000000000000000000000);
+    constructor(address tomb, address tombOracle, address treasury) {
+        Tomb = IERC20(tomb);
+        TombOracle = IOracle(tombOracle);
+        Treasury = ITreasury(treasury);
     }
     
     // Bond asset for discounted Tomb at bond rate
