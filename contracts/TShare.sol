@@ -45,7 +45,7 @@ contract TShare is ERC20Burnable, Operator {
         require(_devFund != address(0), "Address cannot be 0");
         devFund = _devFund;
 
-        require(_communityFund != address(0), "Address cannot be 0");
+        //require(_communityFund != address(0), "Address cannot be 0");
         communityFund = _communityFund;
     }
 
