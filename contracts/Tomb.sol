@@ -249,18 +249,18 @@ contract Tomb is ERC20Burnable, Operator {
      * @notice distribute to reward pool (only once)
      */
     function distributeReward(
-        address _genesisPool,
-        address _tombPool,
-        address _airdropWallet
+        address _genesisPool
+        //address _tombPool,
+        //address _airdropWallet
     ) external onlyOperator {
         require(!rewardPoolDistributed, "only can distribute once");
         require(_genesisPool != address(0), "!_genesisPool");
-        require(_tombPool != address(0), "!_tombPool");
-        require(_airdropWallet != address(0), "!_airdropWallet");
+        //require(_tombPool != address(0), "!_tombPool");
+        //require(_airdropWallet != address(0), "!_airdropWallet");
         rewardPoolDistributed = true;
         _mint(_genesisPool, INITIAL_GENESIS_POOL_DISTRIBUTION);
-        _mint(_tombPool, INITIAL_TOMB_POOL_DISTRIBUTION);
-        _mint(_airdropWallet, INITIAL_AIRDROP_WALLET_DISTRIBUTION);
+        //_mint(_tombPool, INITIAL_TOMB_POOL_DISTRIBUTION);
+        //_mint(_airdropWallet, INITIAL_AIRDROP_WALLET_DISTRIBUTION);
     }
 
     function governanceRecoverUnsupported(
