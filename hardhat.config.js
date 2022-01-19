@@ -1,9 +1,14 @@
 require("@nomiclabs/hardhat-waffle")
+require("@nomiclabs/hardhat-etherscan")
 module.exports = {
     networks: {
         hardhat: {},
         ropsten: {
             url: "https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+            accounts: []
+        },
+        fantom: {
+            url: "https://rpc.ftm.tools",
             accounts: []
         }
     },
@@ -25,5 +30,8 @@ module.exports = {
                 }
             }
         }]
+    },
+    etherscan: {
+        apiKey: "3EBCSRPNAX3BNVPMWSG8F1XEHA9ANI3M5E"
     }
 }
