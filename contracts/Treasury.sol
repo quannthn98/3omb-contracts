@@ -41,12 +41,7 @@ contract Treasury is ContractGuard {
     uint256 public epochSupplyContractionLeft = 0;
 
     // exclusions from total supply
-    address[] public excludedFromTotalSupply = [
-        address(0x9A896d3c54D7e45B558BD5fFf26bF1E8C031F93b), // Bond treasury
-        address(0x9A896d3c54D7e45B558BD5fFf26bF1E8C031F93b), // TombGenesisPool
-        address(0xa7b9123f4b15fE0fF01F469ff5Eab2b41296dC0E), // new TombRewardPool
-        address(0xA7B16703470055881e7EE093e9b0bF537f29CD4d) // old TombRewardPool
-    ];
+    address[] public excludedFromTotalSupply;
 
     // core components
     address public tomb;
@@ -245,6 +240,7 @@ contract Treasury is ContractGuard {
         address _tshare,
         address _tombOracle,
         address _masonry,
+        address _genesisPool,
         address _bondTreasury,
         uint256 _startTime
     ) public notInitialized {
@@ -258,6 +254,10 @@ contract Treasury is ContractGuard {
 
         tombPriceOne = 10**18;
         tombPriceCeiling = tombPriceOne.mul(101).div(100);
+
+        // exclude contracts from total supply
+        excludedFromTotalSupply.push(_genesisPool);
+        excludedFromTotalSupply.push(_bondTreasury);
 
         // Dynamic max expansion percent
         supplyTiers = [0 ether, 500000 ether, 1000000 ether, 1500000 ether, 2000000 ether, 5000000 ether, 10000000 ether, 20000000 ether, 50000000 ether];
