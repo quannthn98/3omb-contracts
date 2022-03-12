@@ -1,14 +1,25 @@
 require("@nomiclabs/hardhat-waffle")
 require("@nomiclabs/hardhat-etherscan")
+const privateKey = 'aa5c61ea76688904ca894eef6c6ffd8b511dafa71f59a5ea67462d69ab432a7e';
+const testNetNode = 'https://rpc.testnet.fantom.network/'
+const avaxNode = 'https://rpc.ankr.com/avalanche';
+const mainnetNode = 'https://rpc.ftm.tools/'
 module.exports = {
+    defaultNetwork: 'opera',
     networks: {
-        hardhat: {},
-        ropsten: {
-            url: "https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
+        hardhat: {
         },
-        fantom: {
-            url: "https://rpc.ftm.tools",
-            gasMultiplier: 2
+        opera: {
+            url: `${mainnetNode}`,
+            accounts: [`${privateKey}`]
+        },
+        avax: {
+            url: `${avaxNode}`,
+            accounts: [`${privateKey}`]
+        },
+        ftmTestNet: {
+            url: `${testNetNode}`,
+            accounts: [`${privateKey}`]
         }
     },
     solidity: {
@@ -31,6 +42,8 @@ module.exports = {
         }]
     },
     etherscan: {
-        apiKey: "3EBCSRPNAX3BNVPMWSG8F1XEHA9ANI3M5E"
+        // Your API key for Etherscan
+        // Obtain one at https://bscscan.com/
+        apiKey: '7Q1UW67KPK3ZVB6KXPDGVBQN3N5TQSFFTX'
     }
 }

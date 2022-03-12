@@ -14,9 +14,9 @@ contract Tomb is ERC20Burnable, Operator {
     using SafeMath for uint256;
 
     // Initial distribution for the first 24h genesis pools
-    uint256 public constant INITIAL_GENESIS_POOL_DISTRIBUTION = 25000 ether;
-    // Initial distribution for the day 2-5 TOMB-WFTM LP -> TOMB pool
-    uint256 public constant INITIAL_TOMB_POOL_DISTRIBUTION = 0 ether;
+    uint256 public constant INITIAL_GENESIS_POOL_DISTRIBUTION = 425 ether;
+    // Initial distribution for the day 0-2 TOMB-WFTM LP -> TOMB pool
+    uint256 public constant INITIAL_TOMB_POOL_DISTRIBUTION = 1575 ether;
     // Distribution for airdrops wallet
     uint256 public constant INITIAL_AIRDROP_WALLET_DISTRIBUTION = 0 ether;
 
@@ -61,7 +61,7 @@ contract Tomb is ERC20Burnable, Operator {
     /**
      * @notice Constructs the TOMB ERC-20 contract.
      */
-    constructor(uint256 _taxRate, address _taxCollectorAddress) public ERC20("3OMB", "3OMB Token") {
+    constructor(uint256 _taxRate, address _taxCollectorAddress) public ERC20("GOLD", "GOLD") {
         // Mints 1 TOMB to contract creator for initial pool setup
         require(_taxRate < 10000, "tax equal or bigger to 100%");
         //require(_taxCollectorAddress != address(0), "tax collector address must be non-zero address");
@@ -249,16 +249,17 @@ contract Tomb is ERC20Burnable, Operator {
      * @notice distribute to reward pool (only once)
      */
     function distributeReward(
-        address _genesisPool
-        //address _tombPool,
+        address _genesisPool,
+        address _tombPool
         //address _airdropWallet
     ) external onlyOperator {
         require(!rewardPoolDistributed, "only can distribute once");
         require(_genesisPool != address(0), "!_genesisPool");
-        //require(_tombPool != address(0), "!_tombPool");
+        require(_tombPool != address(0), "!_tombPool");
         //require(_airdropWallet != address(0), "!_airdropWallet");
         rewardPoolDistributed = true;
         _mint(_genesisPool, INITIAL_GENESIS_POOL_DISTRIBUTION);
+        _mint(_tombPool, INITIAL_TOMB_POOL_DISTRIBUTION);
         //_mint(_tombPool, INITIAL_TOMB_POOL_DISTRIBUTION);
         //_mint(_airdropWallet, INITIAL_AIRDROP_WALLET_DISTRIBUTION);
     }

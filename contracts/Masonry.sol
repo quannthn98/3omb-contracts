@@ -126,8 +126,8 @@ contract Masonry is ShareWrapper, ContractGuard {
         MasonrySnapshot memory genesisSnapshot = MasonrySnapshot({time : block.number, rewardReceived : 0, rewardPerShare : 0});
         masonryHistory.push(genesisSnapshot);
 
-        withdrawLockupEpochs = 3; // Lock for 6 epochs (36h) before release withdraw
-        rewardLockupEpochs = 1; // Lock for 3 epochs (18h) before release claimReward
+        withdrawLockupEpochs = 4; // Lock for 4 epochs (36h) before release withdraw
+        rewardLockupEpochs = 2; // Lock for 2 epochs (18h) before release claimReward
 
         initialized = true;
         operator = msg.sender;

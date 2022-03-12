@@ -17,20 +17,21 @@ contract TombRewardPool {
 
     // Info of each user.
     struct UserInfo {
-        uint256 amount; // How many LP tokens the user has provided.
+        uint256 amount; // How many tokens the user has provided.
         uint256 rewardDebt; // Reward debt. See explanation below.
     }
 
     // Info of each pool.
     struct PoolInfo {
         IERC20 token; // Address of LP token contract.
-        uint256 allocPoint; // How many allocation points assigned to this pool. TOMBs to distribute in the pool.
-        uint256 lastRewardTime; // Last time that TOMBs distribution occurred.
-        uint256 accTombPerShare; // Accumulated TOMBs per share, times 1e18. See below.
-        bool isStarted; // if lastRewardTime has passed
+        uint256 allocPoint; // How many allocation points assigned to this pool. TOMB to distribute.
+        uint256 lastRewardTime; // Last time that TOMB distribution occurs.
+        uint256 accTombPerShare; // Accumulated TOMB per share, times 1e18. See below.
+        bool isStarted;
     }
 
     IERC20 public tomb;
+    address public daoFundAddress;
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
@@ -44,44 +45,42 @@ contract TombRewardPool {
     // The time when TOMB mining starts.
     uint256 public poolStartTime;
 
-    uint256[] public epochTotalRewards = [80000 ether, 60000 ether];
+    // The time when TOMB mining ends.
+    uint256 public poolEndTime;
 
-    // Time when each epoch ends.
-    uint256[3] public epochEndTimes;
-
-    // Reward per second for each of 2 epochs (last item is equal to 0 - for sanity).
-    uint256[3] public epochTombPerSecond;
+    // MAINNET
+    uint256 public tombPerSecond = 0.00455729 ether;
+    uint256 public runningTime = 4 days;
+    uint256 public constant TOTAL_REWARDS = 1575 ether;
+    // END MAINNET
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event RewardPaid(address indexed user, uint256 amount);
 
-    constructor(address _tomb, uint256 _poolStartTime) public {
+    constructor(
+        address _tomb,
+        address _daoFund,
+        uint256 _poolStartTime
+    ) public {
         require(block.timestamp < _poolStartTime, "late");
         if (_tomb != address(0)) tomb = IERC20(_tomb);
-
+        if (_daoFund != address(0)) daoFundAddress = _daoFund;
         poolStartTime = _poolStartTime;
-
-        epochEndTimes[0] = poolStartTime + 4 days; // Day 2-5
-        epochEndTimes[1] = epochEndTimes[0] + 5 days; // Day 6-10
-
-        epochTombPerSecond[0] = epochTotalRewards[0].div(4 days);
-        epochTombPerSecond[1] = epochTotalRewards[1].div(5 days);
-
-        epochTombPerSecond[2] = 0;
+        poolEndTime = poolStartTime + runningTime;
         operator = msg.sender;
     }
 
     modifier onlyOperator() {
-        require(operator == msg.sender, "TombRewardPool: caller is not the operator");
+        require(operator == msg.sender, "TombGenesisPool: caller is not the operator");
         _;
     }
 
     function checkPoolDuplicate(IERC20 _token) internal view {
         uint256 length = poolInfo.length;
         for (uint256 pid = 0; pid < length; ++pid) {
-            require(poolInfo[pid].token != _token, "TombRewardPool: existing pool?");
+            require(poolInfo[pid].token != _token, "TombGenesisPool: existing pool?");
         }
     }
 
@@ -111,8 +110,16 @@ contract TombRewardPool {
                 _lastRewardTime = block.timestamp;
             }
         }
-        bool _isStarted = (_lastRewardTime <= poolStartTime) || (_lastRewardTime <= block.timestamp);
-        poolInfo.push(PoolInfo({token: _token, allocPoint: _allocPoint, lastRewardTime: _lastRewardTime, accTombPerShare: 0, isStarted: _isStarted}));
+        bool _isStarted =
+        (_lastRewardTime <= poolStartTime) ||
+        (_lastRewardTime <= block.timestamp);
+        poolInfo.push(PoolInfo({
+        token : _token,
+        allocPoint : _allocPoint,
+        lastRewardTime : _lastRewardTime,
+        accTombPerShare : 0,
+        isStarted : _isStarted
+        }));
         if (_isStarted) {
             totalAllocPoint = totalAllocPoint.add(_allocPoint);
         }
@@ -123,36 +130,28 @@ contract TombRewardPool {
         massUpdatePools();
         PoolInfo storage pool = poolInfo[_pid];
         if (pool.isStarted) {
-            totalAllocPoint = totalAllocPoint.sub(pool.allocPoint).add(_allocPoint);
+            totalAllocPoint = totalAllocPoint.sub(pool.allocPoint).add(
+                _allocPoint
+            );
         }
         pool.allocPoint = _allocPoint;
     }
 
-    // Return accumulate rewards over the given _fromTime to _toTime.
+    // Return accumulate rewards over the given _from to _to block.
     function getGeneratedReward(uint256 _fromTime, uint256 _toTime) public view returns (uint256) {
-        for (uint8 epochId = 2; epochId >= 1; --epochId) {
-            if (_toTime >= epochEndTimes[epochId - 1]) {
-                if (_fromTime >= epochEndTimes[epochId - 1]) {
-                    return _toTime.sub(_fromTime).mul(epochTombPerSecond[epochId]);
-                }
-
-                uint256 _generatedReward = _toTime.sub(epochEndTimes[epochId - 1]).mul(epochTombPerSecond[epochId]);
-                if (epochId == 1) {
-                    return _generatedReward.add(epochEndTimes[0].sub(_fromTime).mul(epochTombPerSecond[0]));
-                }
-                for (epochId = epochId - 1; epochId >= 1; --epochId) {
-                    if (_fromTime >= epochEndTimes[epochId - 1]) {
-                        return _generatedReward.add(epochEndTimes[epochId].sub(_fromTime).mul(epochTombPerSecond[epochId]));
-                    }
-                    _generatedReward = _generatedReward.add(epochEndTimes[epochId].sub(epochEndTimes[epochId - 1]).mul(epochTombPerSecond[epochId]));
-                }
-                return _generatedReward.add(epochEndTimes[0].sub(_fromTime).mul(epochTombPerSecond[0]));
-            }
+        if (_fromTime >= _toTime) return 0;
+        if (_toTime >= poolEndTime) {
+            if (_fromTime >= poolEndTime) return 0;
+            if (_fromTime <= poolStartTime) return poolEndTime.sub(poolStartTime).mul(tombPerSecond);
+            return poolEndTime.sub(_fromTime).mul(tombPerSecond);
+        } else {
+            if (_toTime <= poolStartTime) return 0;
+            if (_fromTime <= poolStartTime) return _toTime.sub(poolStartTime).mul(tombPerSecond);
+            return _toTime.sub(_fromTime).mul(tombPerSecond);
         }
-        return _toTime.sub(_fromTime).mul(epochTombPerSecond[0]);
     }
 
-    // View function to see pending TOMBs on frontend.
+    // View function to see pending TOMB on frontend.
     function pendingTOMB(uint256 _pid, address _user) external view returns (uint256) {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][_user];
@@ -212,7 +211,11 @@ contract TombRewardPool {
         }
         if (_amount > 0) {
             pool.token.safeTransferFrom(_sender, address(this), _amount);
-            user.amount = user.amount.add(_amount);
+            uint256 depositDebt = 0;
+
+            depositDebt = _amount.mul(50).div(10000); //Calculate tax Tax 0.5%
+            pool.token.safeTransfer(daoFundAddress, depositDebt);
+            user.amount = user.amount.add(_amount.sub(depositDebt)); //Send tax
         }
         user.rewardDebt = user.amount.mul(pool.accTombPerShare).div(1e18);
         emit Deposit(_sender, _pid, _amount);
@@ -249,12 +252,12 @@ contract TombRewardPool {
         emit EmergencyWithdraw(msg.sender, _pid, _amount);
     }
 
-    // Safe tomb transfer function, just in case if rounding error causes pool to not have enough TOMBs.
+    // Safe TOMB transfer function, just in case if rounding error causes pool to not have enough TOMBs.
     function safeTombTransfer(address _to, uint256 _amount) internal {
-        uint256 _tombBal = tomb.balanceOf(address(this));
-        if (_tombBal > 0) {
-            if (_amount > _tombBal) {
-                tomb.safeTransfer(_to, _tombBal);
+        uint256 _tombBalance = tomb.balanceOf(address(this));
+        if (_tombBalance > 0) {
+            if (_amount > _tombBalance) {
+                tomb.safeTransfer(_to, _tombBalance);
             } else {
                 tomb.safeTransfer(_to, _amount);
             }
@@ -265,20 +268,17 @@ contract TombRewardPool {
         operator = _operator;
     }
 
-    function governanceRecoverUnsupported(
-        IERC20 _token,
-        uint256 amount,
-        address to
-    ) external onlyOperator {
-        if (block.timestamp < epochEndTimes[1] + 30 days) {
-            // do not allow to drain token if less than 30 days after farming
-            require(_token != tomb, "!tomb");
+    function governanceRecoverUnsupported(IERC20 _token, uint256 amount, address to) external onlyOperator {
+        if (block.timestamp < poolEndTime + 90 days) {
+            // do not allow to drain core token (TOMB or lps) if less than 90 days after pool ends
+            require(_token != tomb, "tomb");
             uint256 length = poolInfo.length;
             for (uint256 pid = 0; pid < length; ++pid) {
                 PoolInfo storage pool = poolInfo[pid];
-                require(_token != pool.token, "!pool.token");
+                require(_token != pool.token, "pool.token");
             }
         }
         _token.safeTransfer(to, amount);
     }
 }
+

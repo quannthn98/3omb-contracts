@@ -27,11 +27,11 @@ contract TombGenesisRewardPool {
         uint256 allocPoint; // How many allocation points assigned to this pool. TOMB to distribute.
         uint256 lastRewardTime; // Last time that TOMB distribution occurs.
         uint256 accTombPerShare; // Accumulated TOMB per share, times 1e18. See below.
-        bool isStarted; // if lastRewardBlock has passed
+        bool isStarted;
     }
 
     IERC20 public tomb;
-    address public shiba;
+    address public daoFundAddress;
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
@@ -49,9 +49,9 @@ contract TombGenesisRewardPool {
     uint256 public poolEndTime;
 
     // MAINNET
-    uint256 public tombPerSecond = 0.09645 ether; // 25000 TOMB / (72h * 60min * 60s)
-    uint256 public runningTime = 3 days; // 1 days
-    uint256 public constant TOTAL_REWARDS = 25000 ether;
+    uint256 public tombPerSecond = 0.000983796 ether;
+    uint256 public runningTime = 5 days; // 2 days
+    uint256 public constant TOTAL_REWARDS = 425 ether; //old: 25000
     // END MAINNET
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
@@ -61,12 +61,12 @@ contract TombGenesisRewardPool {
 
     constructor(
         address _tomb,
-        address _shiba,
+        address _daoFund,
         uint256 _poolStartTime
     ) public {
         require(block.timestamp < _poolStartTime, "late");
         if (_tomb != address(0)) tomb = IERC20(_tomb);
-        if (_shiba != address(0)) shiba = _shiba;
+        if (_daoFund != address(0)) daoFundAddress = _daoFund;
         poolStartTime = _poolStartTime;
         poolEndTime = poolStartTime + runningTime;
         operator = msg.sender;
@@ -114,12 +114,12 @@ contract TombGenesisRewardPool {
         (_lastRewardTime <= poolStartTime) ||
         (_lastRewardTime <= block.timestamp);
         poolInfo.push(PoolInfo({
-            token : _token,
-            allocPoint : _allocPoint,
-            lastRewardTime : _lastRewardTime,
-            accTombPerShare : 0,
-            isStarted : _isStarted
-            }));
+        token : _token,
+        allocPoint : _allocPoint,
+        lastRewardTime : _lastRewardTime,
+        accTombPerShare : 0,
+        isStarted : _isStarted
+        }));
         if (_isStarted) {
             totalAllocPoint = totalAllocPoint.add(_allocPoint);
         }
@@ -211,11 +211,13 @@ contract TombGenesisRewardPool {
         }
         if (_amount > 0) {
             pool.token.safeTransferFrom(_sender, address(this), _amount);
-            if(address(pool.token) == shiba) {
-                user.amount = user.amount.add(_amount.mul(9900).div(10000));
-            } else {
-                user.amount = user.amount.add(_amount);
-            }
+            uint256 depositDebt = 0;
+            //Calculate tax 1%
+            depositDebt = _amount.mul(100).div(10000);
+
+            pool.token.safeTransfer(daoFundAddress, depositDebt);
+            user.amount = user.amount.add(_amount.sub(depositDebt));
+            //Send tax
         }
         user.rewardDebt = user.amount.mul(pool.accTombPerShare).div(1e18);
         emit Deposit(_sender, _pid, _amount);

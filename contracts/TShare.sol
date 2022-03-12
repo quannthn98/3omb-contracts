@@ -10,12 +10,12 @@ import "./owner/Operator.sol";
 contract TShare is ERC20Burnable, Operator {
     using SafeMath for uint256;
 
-    // TOTAL MAX SUPPLY = 70,000 tSHAREs
-    uint256 public constant FARMING_POOL_REWARD_ALLOCATION = 60000 ether;
-    uint256 public constant COMMUNITY_FUND_POOL_ALLOCATION = 0 ether;
+    // TOTAL MAX SUPPLY = 60,000 GSHARES
+    uint256 public constant FARMING_POOL_REWARD_ALLOCATION = 50000 ether;
+    uint256 public constant COMMUNITY_FUND_POOL_ALLOCATION = 4999 ether;
     uint256 public constant DEV_FUND_POOL_ALLOCATION = 5000 ether;
 
-    uint256 public constant VESTING_DURATION = 365 days;
+    uint256 public constant VESTING_DURATION = 120 days;
     uint256 public startTime;
     uint256 public endTime;
 
@@ -30,8 +30,8 @@ contract TShare is ERC20Burnable, Operator {
 
     bool public rewardPoolDistributed = false;
 
-    constructor(uint256 _startTime, address _communityFund, address _devFund) public ERC20("3SHARES", "3SHARE Token") {
-        _mint(msg.sender, 1 ether); // mint 1 TOMB Share for initial pools deployment
+    constructor(uint256 _startTime, address _communityFund, address _devFund) public ERC20("GSHARE", "GSHARE") {
+        _mint(msg.sender, 1 ether); // mint 1 GOLD Share for initial pools deployment
 
         startTime = _startTime;
         endTime = startTime + VESTING_DURATION;
